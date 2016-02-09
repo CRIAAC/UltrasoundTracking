@@ -1,0 +1,26 @@
+﻿<Window x:Class="UltrasoundTracking.Photons.PhotonManagement"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ResizeMode="NoResize"
+        Title="PhotonManagement" SizeToContent="WidthAndHeight">
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid x:Name="PhotonsGrid" CanUserSortColumns="False" AutoGenerateColumns="True" Grid.Column="0" Width="auto" MouseDoubleClick="PhotonsGrid_MouseDoubleClick" />
+        
+        <Grid Margin="10" Grid.Column="1" HorizontalAlignment="Right">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Button x:Name="ButtonAddPhoton" Grid.Row="0" Content="Add" Margin="5" Click="buttonAddPhoton_Click"/>
+            <Button x:Name="ButtonDeletePhoton" Grid.Row="1" Content="Delete" Margin="5" Click="buttonDeletePhoton_Click"/>
+            <Button x:Name="ButtonSavePhotons" Grid.Row="2" Content="Save" Margin="5" Click="buttonSavePhotons_Click" />
+            <TextBlock Grid.Row="3" Margin="10" TextWrapping="Wrap" MaxWidth="70"><Run Text="Note: Changes "/><Run Text="are saved when "/><Run/><LineBreak/><Run Text="closing the window."/></TextBlock>
+        </Grid>
+    </Grid>
+</Window>

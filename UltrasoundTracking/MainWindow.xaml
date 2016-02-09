@@ -1,0 +1,89 @@
+﻿<Window x:Name="Window" x:Class="UltrasoundTracking.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:liaraUltrasoundDataviz="clr-namespace:UltrasoundTracking"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        MinWidth="800" 
+        ResizeMode="CanResize" SizeToContent="Height">  
+    <Grid>
+        <DockPanel Margin="0,0,0,0">
+            <Menu DockPanel.Dock="Top" x:Name="Menu" Height="20" Panel.ZIndex="9001" VerticalAlignment="Top">
+                <MenuItem x:Name="MenuItemFile" Header="_File">
+                    <MenuItem x:Name="MenuItemFileConfig" Header="Config ..." Click="MenuItem_File_Config_Click" IsEnabled="False" />
+                    <MenuItem x:Name="MenuItemFileExit" Header="Exit" Click="MenuItem_File_Exit_Click"/>
+                </MenuItem>
+                <MenuItem x:Name="MenuItemSensors" Header="_Sensors">
+                    <MenuItem x:Name="MenuItemSensorsAdd" Header="_Add" Click="SensorsAdd_Click"/>
+                    <MenuItem x:Name="MenuItemSensorsManagement" Header="_Manage sensors" Click="SensorsMgmt_Click"/>
+                </MenuItem>
+                <MenuItem x:Name="MenuItemPhotons" Header="_Photons">
+                    <MenuItem x:Name="MenuItemPhotonsAdd" Header="_Add" Click="MenuItem_Photons_Add_Click" />
+                    <MenuItem x:Name="MenuItemPhotonsManagement" Header="_Manage Protons" Click="MenuItem_Photons_Management_Click" />
+                </MenuItem>
+                <ToggleButton x:Name="MenuToggleAcquisition" Content="Toggle acquisition" Click="MenuToggleAcquisition_OnClick"/>
+                <ToggleButton x:Name="MenuRawData" Content="Raw data" Click="MenuRawData_Click"/>
+                <ToggleButton x:Name="MenuComputedData" Content="Computed data" Click="MenuComputedData_Click"/>
+                <Button x:Name="MenuCalibrateSensors" Content="Calibrate" Width="75" Click="MenuCalibrate_Click"/>
+            </Menu>
+            <StatusBar DockPanel.Dock="Bottom" Height="20" VerticalAlignment="Bottom" Panel.ZIndex="9001">
+                <StatusBarItem HorizontalAlignment="Left" Width="90">
+                    <TextBlock x:Name="AcquisitionStatusLabel" Text="Acquisition OFF" />
+                </StatusBarItem>
+                <StatusBarItem>
+                    <Ellipse x:Name="AcquisitionStateCircle" Height="14" Width="14" Stroke="Red" Fill="Red"  />
+                </StatusBarItem>
+                <Separator Height="20" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <StatusBarItem>
+                    <TextBlock Text="Sensors placed: 0/0" />
+                </StatusBarItem>
+                <Separator Height="20" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <TextBlock Text="Sensors displayed: 0/0" />
+                </StatusBarItem>
+                <Separator Height="20" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <StatusBarItem>
+                    <TextBlock Name="DataTest" Text=""/>
+                </StatusBarItem>
+            </StatusBar>
+            <Grid Name="GlobalGrid" DockPanel.Dock="Left">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Panel.ZIndex="20" VerticalAlignment="Top">
+                    <Image x:Name="RoomMap" Source="Images/RoomMap2.png"/>
+                    <Canvas x:Name="MapEntitiesCanvas" />
+                </Grid>
+                <StackPanel x:Name="ComputedDataPanel" Grid.Row="0" Grid.Column="1" Orientation="Vertical" Width="0" HorizontalAlignment="Right" Background="Teal">
+                    <DataGrid x:Name="ComputedDataGrid" AutoGenerateColumns="True" Width="auto" ItemsSource="{Binding DictPhoton}"/>
+                </StackPanel>
+                <StackPanel x:Name="RawDataPanel" Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Height="0" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
+                    <TabControl x:Name="PhotonsTabs" Margin="0,0,0,0" Height="130" Width="auto" ItemsSource="{Binding DictPhoton}"/>
+                    <!-- TODO: Manage raw data tabs directly from here instead of from code-behind -->
+                    <!--    <TabControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Key}" Margin="5"/>
+                                    <Ellipse Width="10" Height="10" Fill="{Binding Value.Col2}" Stroke="{Binding Value.Col2}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                        <TabControl.ContentTemplate>
+                            <DataTemplate>
+                                
+                            </DataTemplate>
+                        </TabControl.ContentTemplate>
+                    </TabControl>-->
+                </StackPanel>
+            </Grid>
+        </DockPanel>
+
+    </Grid>
+</Window>
