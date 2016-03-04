@@ -3,6 +3,7 @@ using UltrasoundTracking.Photons;
 using UltrasoundTracking.Sensors;
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -49,11 +50,15 @@ namespace UltrasoundTracking
             Thread.CurrentThread.CurrentCulture = customCulture;
 
             // Timer
-            _aTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
-            _aTimer.Tick += _timer_Tick;
+            _aTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000 / 60) };
+            _aTimer.Tick += TimerTick;
+            _aTimer.Start();
 
             // Photons
             DictPhoton = new Dictionary<string, PhotonGUI>();
+
+            // Read conf from local json file
+            ReadConfFromJson();
 
             // Computed data
             //ComputedData = new Dictionary<string, string>();
@@ -64,16 +69,11 @@ namespace UltrasoundTracking
             // Photon manager
             _manager = new PhotonManager();
             _manager.DataReceived += ManagerDataReceived;
+            LoadManagerPhotons();
             _acquisitionState = AcquisitionState.Off;
 
             // Calibration state initialised to false
             _isCalibrating = false;
-
-            // Read conf from local json file
-            ReadConfFromJson();
-
-            RefreshManagerPhotons();
-            UpdateUI();
 
             // Window events
             Loaded += MainWindow_Loaded;
@@ -82,7 +82,8 @@ namespace UltrasoundTracking
             Closing += MainWindow_Closing;
         }
 
-        void _timer_Tick(object sender, EventArgs e)
+        // Main loop
+        private void TimerTick(object sender, EventArgs e)
         {
             DataTest.Text = "";
             MovingEntities.Clear();
@@ -151,24 +152,23 @@ namespace UltrasoundTracking
 
             // Draw detected entities on the canvas
             DrawMovingEntities();
-
-            DataTest.Text = MovingEntities.Count > 0 ? MovingEntities.Count +" "+ MovingEntities[0].DeltaX +" "+ MovingEntities[0].DeltaY +" "+ MovingEntities[0]._lastKnownPositions.Count: "";
         }
-
-
 
         // Actions when window loaded
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            UpdateUI();
             MinHeight = ActualHeight;
+            if (File.Exists("movingentities.txt"))
+                File.Delete("movingentities.txt");
         }
 
+        // Changes when the window is manually resized by the user
         private void MainWindow_Resized(object sender, RoutedEventArgs e)
         {
             UpdateUI();
         }
 
+        // Changes when the window minimizes, maximizes, or is normal
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
             switch (WindowState)
@@ -298,6 +298,7 @@ namespace UltrasoundTracking
             UpdateUI();
         }
 
+        // Calibration toggle
         private void MenuCalibrate_Click(object sender, RoutedEventArgs e)
         {
             Window.IsEnabled = false;
@@ -405,7 +406,7 @@ namespace UltrasoundTracking
             DrawMovingEntities();
         }
 
-        // Draws lines based on data received from photons
+        // Draws sensors circles
         private void DrawSensors()
         {
             double widthDifference = MapEntitiesCanvas.ActualWidth - RoomMap.ActualWidth;
@@ -436,6 +437,7 @@ namespace UltrasoundTracking
             }
         }
 
+        // Draws sensors lines based on data received
         private void DrawSensorLine()
         {
             double widthDifference = MapEntitiesCanvas.ActualWidth - RoomMap.ActualWidth;
@@ -456,6 +458,7 @@ namespace UltrasoundTracking
             }
         }
 
+        // Draws lines for a specific sensor
         private void DrawSensorLine(Ellipse sensorEllipse, Sensor s, string photonKey)
         {
             // Adds line from dot to distance returned by the Photon
@@ -489,6 +492,7 @@ namespace UltrasoundTracking
             MapEntitiesCanvas.Children.Add(sensorLine);
         }
 
+        // Draws detected moving entities
         private void DrawMovingEntities()
         {
             MapEntitiesCanvas.Children.OfType<Ellipse>().ToList().FindAll(ellipse => ellipse.Name == "MovingEntity").ForEach(ellipse => MapEntitiesCanvas.Children.Remove(ellipse));
@@ -517,6 +521,7 @@ namespace UltrasoundTracking
         {
             // Store data receive to sensors in photons
             List<long> photonData = data.ListMaxSonarSensor;
+
             string photonKey = DictPhoton.Keys.ToList().Find(x => x.Contains(data.Photon));
 
             foreach (Sensor sensor in DictPhoton[photonKey].Sensors)
@@ -567,6 +572,13 @@ namespace UltrasoundTracking
             file.Close();
         }
 
+        // Load photons to PhotonManager
+        private void LoadManagerPhotons()
+        {
+            foreach (string photonKey in DictPhoton.Keys)
+                _manager.AddPhoton(DictPhoton[photonKey].IP, DictPhoton[photonKey].Port);
+        }
+
         // Refresh photons managed by the PhotonManager
         private void RefreshManagerPhotons()
         {
@@ -583,6 +595,7 @@ namespace UltrasoundTracking
                 _manager.Start();
         }
 
+        // Toggle data acquisition
         private void ToggleAcquisition()
         {
             if (_acquisitionState == AcquisitionState.On)
@@ -591,6 +604,7 @@ namespace UltrasoundTracking
                 StartAcquisition();
         }
 
+        // Stop data acquisition
         private void StopAcquisition()
         {
             _aTimer.Stop();
@@ -611,6 +625,7 @@ namespace UltrasoundTracking
             UpdateUI();
         }
 
+        // Start data acquisition
         private void StartAcquisition()
         {
             _aTimer.Start();

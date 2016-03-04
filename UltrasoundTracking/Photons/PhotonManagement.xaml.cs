@@ -33,8 +33,6 @@ namespace UltrasoundTracking.Photons
 
             Loaded += OnLoaded;
             Closing += OnClosing;
-
-            
         }
 
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)

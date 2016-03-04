@@ -10,7 +10,7 @@ namespace UDPPhotonLibrary
 
         public event PhotonDataHandler DataReceived;
 
-        private Thread _mainThread;
+        //private Thread _mainThread;
 
         private bool _stop;
 
@@ -47,55 +47,27 @@ namespace UDPPhotonLibrary
         }
 
         /// <summary>
-        /// Starts this instance.
+        /// Starts the photons
         /// </summary>
         public void Start()
         {
-            if (_mainThread == null)
+            foreach (Photon photon in Photons)
             {
-                _stop = false;
-                _mainThread = new Thread(Loop);
-                _mainThread.Start();
+                photon.StartThread();
             }
         }
 
         /// <summary>
-        /// Stops this instance.
+        /// Stops the photons
         /// </summary>
         public void Stop()
         {
-            if (_mainThread != null)
+            foreach (Photon photon in Photons)
             {
-                _stop = true;
-                Thread.Sleep(200);
-                if (_mainThread.IsAlive)
-                {
-                    _mainThread.Abort();
-                }
-                _mainThread = null;
+                photon.StopThread();
             }
         }
 
-        /// <summary>
-        /// Loops this instance.
-        /// </summary>
-        private void Loop()
-        {
-            while (!_stop)
-            {
-                foreach (var photon in Photons)
-                {
-                    //(new Thread(photon.Query)).Start();
-                    photon.Query();
-                }
-
-                Thread.Sleep(1);
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
         public void Dispose()
         {
             Stop();
