@@ -17,15 +17,16 @@ namespace UDPPhotonClient
 
             _fileWriter = new StreamWriter(new FileStream("./dataset.csv", FileMode.Truncate));
             _fileWriter.WriteLine("ULTRASOUND_1;ULTRASOUND_2;ULTRASOUND_3;ULTRASOUND_4;ULTRASOUND_5;sensor");
-            using (PhotonManager manager = new PhotonManager())
+            using (PhotonManager manager = new PhotonManager(true))
             {
                 manager.DataReceived += ManagerDataReceived;
-                manager.AddPhoton("172.24.24.113", 8888);
+                manager.AddPhoton("192.168.1.31", 8888, 0, true);
+                manager.AddPhoton("192.168.1.32", 8888, 1, true);
 
                 manager.Start();
                 Console.WriteLine("Press enter to quit");
                 Console.ReadLine();
-                manager.Stop();
+                manager.StopAll();
             }
         }
 
