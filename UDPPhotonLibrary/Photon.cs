@@ -44,7 +44,7 @@ namespace UDPPhotonLibrary
             Ip = ip;
             Port = port;
             _client = new UdpClient(Ip, Port);
-            _client.Client.ReceiveTimeout = 160;
+            _client.Client.ReceiveTimeout = 120;
             _photon = new IPEndPoint(IPAddress.Parse(Ip), Port);
             _lastFilteredValues = new List<PhotonData>();
             _debug = debug;

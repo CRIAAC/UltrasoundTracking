@@ -188,7 +188,7 @@ namespace UltrasoundTracking
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
             _aTimer.Stop();
-            _manager.Stop();
+            _manager.StopAll();
             Application.Current.Shutdown();
         }
 
@@ -202,7 +202,7 @@ namespace UltrasoundTracking
         private void MenuItem_File_Exit_Click(object sender, RoutedEventArgs e)
         {
             _aTimer.Stop();
-            _manager.Stop();
+            _manager.StopAll();
             Application.Current.Shutdown();
         }
 
@@ -582,12 +582,9 @@ namespace UltrasoundTracking
         // Refresh photons managed by the PhotonManager
         private void RefreshManagerPhotons()
         {
-            _manager.Stop();
-
-            Photon dummy;
-            while (!_manager.Photons.IsEmpty)
-                _manager.Photons.TryTake(out dummy);
-
+            _manager.StopAll();
+            _manager.PhotonsGroups.Clear();
+            
             foreach (string photonKey in DictPhoton.Keys)
                 _manager.AddPhoton(DictPhoton[photonKey].IP, DictPhoton[photonKey].Port);
 
@@ -608,7 +605,7 @@ namespace UltrasoundTracking
         private void StopAcquisition()
         {
             _aTimer.Stop();
-            _manager.Stop();
+            _manager.StopAll();
             _acquisitionState = AcquisitionState.Off;
             AcquisitionStateCircle.Fill = new SolidColorBrush(Colors.Red);
             AcquisitionStateCircle.Stroke = new SolidColorBrush(Colors.Red);
