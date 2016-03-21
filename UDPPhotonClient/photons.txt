@@ -1,0 +1,6 @@
+# Format: ip:port:[group]:[true|false]
+# If group is empty, group 0 is implied
+# If last part (debug) is empty, false is implied
+# Examples:	192.168.1.100:4444::
+#			192.168.1.100:4444:1:
+#			192.168.1.100:4444::true

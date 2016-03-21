@@ -27,12 +27,9 @@ namespace UDPPhotonLibrary
         private bool _timeOut = false;
         private bool _debug;
 
-        private List<PhotonData> _lastFilteredValues;
-        private long _threshold = 2; // Threshold allowed for data filtering
-        private int filterBaseValues = 10; // Number of values to keep to filter the data
+        public static readonly int Timeout = 150;
 
         private Thread _photonThread;
-        private bool _isThreadOn;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Photon"/> class.
@@ -44,9 +41,8 @@ namespace UDPPhotonLibrary
             Ip = ip;
             Port = port;
             _client = new UdpClient(Ip, Port);
-            _client.Client.ReceiveTimeout = 120;
+            _client.Client.ReceiveTimeout = Timeout;
             _photon = new IPEndPoint(IPAddress.Parse(Ip), Port);
-            _lastFilteredValues = new List<PhotonData>();
             _debug = debug;
 
 
@@ -55,17 +51,11 @@ namespace UDPPhotonLibrary
         public void StartThread()
         {
             _photonThread = new Thread(Query);
-            _isThreadOn = true;
             _photonThread.Start();
         }
 
         public void StopThread()
         {
-            if (_photonThread != null && _photonThread.IsAlive)
-            {
-                _photonThread.Interrupt();
-                _isThreadOn = false;
-            }
         }
 
         /// <summary>
@@ -73,63 +63,60 @@ namespace UDPPhotonLibrary
         /// </summary>
         public void Query()
         {
-            while (_isThreadOn)
+            if (PhotonDataReceived != null)
             {
-                if (PhotonDataReceived != null)
+                try
                 {
-                    try
+                    _client.AllowNatTraversal(true);
+                    byte[] data = Encoding.ASCII.GetBytes("OK");
+                    _client.Send(data, data.Length);
+                    var receivedData = _client.Receive(ref _photon);
+
+                    if (!_timeOut)
                     {
-                        _client.AllowNatTraversal(true);
-                        byte[] data = Encoding.ASCII.GetBytes("OK");
-                        _client.Send(data, data.Length);
-                        var receivedData = _client.Receive(ref _photon);
+                        _sw.Restart();
+                        _timeOut = true;
+                    }
 
-                        if (!_timeOut)
-                        {
-                            _sw.Restart();
-                            _timeOut = true;
-                        }
+                    var json = Encoding.UTF8.GetString(receivedData);
 
-                        var json = Encoding.UTF8.GetString(receivedData);
+                    //Console.WriteLine(json);
+                    var photonData = fastJSON.JSON.ToObject<PhotonData>(json);
+                    PhotonDataReceived(photonData);
 
-                        //Console.WriteLine(json);
-                        var photonData = fastJSON.JSON.ToObject<PhotonData>(json);
-                        PhotonDataReceived(photonData);
+                    if (_debug)
+                    {
+                        Console.WriteLine("==============================\n" +
+                                          "Photon: " + photonData.Photon + ":" + Port);
+                        Console.Write(photonData.ListMaxSonarSensor[0] + " ");
+                        Console.Write(photonData.ListMaxSonarSensor[1] + " ");
+                        Console.Write(photonData.ListMaxSonarSensor[2] + " ");
+                        Console.Write(photonData.ListMaxSonarSensor[3] + " ");
+                        Console.Write(photonData.ListMaxSonarSensor[4] + " ");
+                        Console.Write(photonData.ListMaxSonarSensor[5]);
+                        Console.WriteLine("\n==============================");
 
+                        Console.WriteLine("\n");
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (_timeOut)
+                    {
+                        _sw.Stop();
+                        _timeOut = false;
                         if (_debug)
                         {
-                            Console.WriteLine("==============================\n" +
-                                              "Photon: " + Ip + ":" + Port);
-                            Console.Write(photonData.ListMaxSonarSensor[0] + " ");
-                            Console.Write(photonData.ListMaxSonarSensor[1] + " ");
-                            Console.Write(photonData.ListMaxSonarSensor[2] + " ");
-                            Console.Write(photonData.ListMaxSonarSensor[3] + " ");
-                            Console.Write(photonData.ListMaxSonarSensor[4] + " ");
-                            Console.Write(photonData.ListMaxSonarSensor[5]);
-                            Console.WriteLine("\n==============================");
-
-                            Console.WriteLine("\n");
+                            Console.Write("[" + DateTime.Now.ToLongTimeString() + "] Timeout error; Photon " + Ip + ":" + Port + "; ");
+                            Console.WriteLine("Timeout delay : {" + _sw.Elapsed.Minutes + "}:{" + _sw.Elapsed.Seconds +
+                                          "}:{" + _sw.Elapsed.Milliseconds + "}");
                         }
                     }
-                    catch (Exception e)
+                    else
                     {
-                        if (_timeOut)
+                        if (_debug)
                         {
-                            _sw.Stop();
-                            _timeOut = false;
-                            if (_debug)
-                            {
-                                Console.Write("[" + DateTime.Now.ToLongTimeString() + "] Timeout error; Photon " + Ip + ":" + Port + "; ");
-                                Console.WriteLine("Timeout delay : {" + _sw.Elapsed.Minutes + "}:{" + _sw.Elapsed.Seconds +
-                                              "}:{" + _sw.Elapsed.Milliseconds + "}");
-                            }
-                        }
-                        else
-                        {
-                            if (_debug)
-                            {
-                                Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + "] Timeout error; Photon " + Ip + ":" + Port + "; Exception: " + e.Message + "\n");
-                            }
+                            Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + "] Timeout error; Photon " + Ip + ":" + Port + "; Exception: " + e.Message + "\n");
                         }
                     }
                 }

@@ -11,6 +11,9 @@ namespace UDPPhotonLibrary
         public event PhotonDataHandler DataReceived;
         private bool _isSequential;
 
+        private Thread managerThread;
+        private bool isThreadRunning;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PhotonManager"/> class.
         /// </summary>
@@ -18,7 +21,7 @@ namespace UDPPhotonLibrary
         {
             _isSequential = isSequential;
             PhotonsGroups = new List<ConcurrentBag<Photon>>();
-            //Photons = new ConcurrentBag<Photon>();
+            isThreadRunning = false;
         }
 
         /// <summary>
@@ -49,46 +52,50 @@ namespace UDPPhotonLibrary
             }
         }
 
+        public void Start()
+        {
+            isThreadRunning = true;
+            managerThread = new Thread(Loop);
+            managerThread.Start();
+        }
+
         /// <summary>
         /// Starts the photons
         /// </summary>
-        public void Start()
+        private void Loop()
         {
-            if (_isSequential)
+            while (isThreadRunning)
             {
-                while (true)
+                if (_isSequential)
                 {
                     for (int i = 0; i < PhotonsGroups.Count; i++)
                     {
-                        DateTime lastStartTime = DateTime.Now;
                         foreach (Photon photon in PhotonsGroups[i])
                         {
                             photon.StartThread();
-                            lastStartTime = DateTime.Now;
                         }
-
-                        while (DateTime.Now <= lastStartTime.AddMilliseconds(120))
-                        {
-                        }
+                        Thread.Sleep(Photon.Timeout);
 
                         StopGroup(i);
                     }
                 }
-            }
-            else
-                foreach (ConcurrentBag<Photon> concurrentBag in PhotonsGroups)
+                else
                 {
-                    foreach (Photon photon in concurrentBag)
+                    foreach (ConcurrentBag<Photon> concurrentBag in PhotonsGroups)
                     {
-                        photon.StartThread();
+                        foreach (Photon photon in concurrentBag)
+                        {
+                            photon.StartThread();
+                        }
                     }
                 }
+            }
         }
 
         /// <summary>
         /// Stops one group of photons
         /// </summary>
-        public void StopGroup(int group)
+        private void StopGroup(int group)
         {
             if (PhotonsGroups.Count >= group + 1)
             {
@@ -99,11 +106,10 @@ namespace UDPPhotonLibrary
             }
         }
 
-
         /// <summary>
         /// Stops all the photons
         /// </summary>
-        public void StopAll()
+        private void StopAll()
         {
             foreach (ConcurrentBag<Photon> photonGroup in PhotonsGroups)
             {
@@ -116,6 +122,7 @@ namespace UDPPhotonLibrary
 
         public void Dispose()
         {
+            isThreadRunning = false;
             StopAll();
         }
     }
