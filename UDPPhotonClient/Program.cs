@@ -21,6 +21,8 @@ namespace UDPPhotonClient
             }
 
             List<string> config = File.ReadLines("photons.txt").ToList();
+            config.RemoveAll(s => s.StartsWith("#"));
+
             if (!config.Any())
             {
                 Console.WriteLine("Config file is empty. No Photon to monitor. Exiting.");
@@ -28,7 +30,6 @@ namespace UDPPhotonClient
             }
             else
             {
-
                 _fileWriter = new StreamWriter(new FileStream("./dataset.csv", FileMode.Truncate));
                 _fileWriter.WriteLine("ULTRASOUND_1;ULTRASOUND_2;ULTRASOUND_3;ULTRASOUND_4;ULTRASOUND_5;sensor");
                 using (PhotonManager manager = new PhotonManager(true))
@@ -47,8 +48,7 @@ namespace UDPPhotonClient
 
                             manager.AddPhoton(ip, port, group, debug);
                         }
-                        else if (Regex.IsMatch(line, @"\A\#"))
-                        { }
+                        
                         else
                         {
                             Console.WriteLine("The following line syntax is incorrect: " + line);

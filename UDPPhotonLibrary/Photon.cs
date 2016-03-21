@@ -86,6 +86,7 @@ namespace UDPPhotonLibrary
 
                     if (_debug)
                     {
+                        Console.WriteLine(DateTime.Now.ToString("YY-MM-DD/dd/yy HH:mm:ss.fff"));
                         Console.WriteLine("==============================\n" +
                                           "Photon: " + photonData.Photon + ":" + Port);
                         Console.Write(photonData.ListMaxSonarSensor[0] + " ");
